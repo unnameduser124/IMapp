@@ -192,7 +192,10 @@ class ConversationLayout : ComponentActivity() {
             ) {
                 Icon(
                     imageVector = Icons.Filled.Send,
-                    contentDescription = "Send message"
+                    contentDescription = "Send message",
+                    modifier = Modifier
+                        .width(45.dp)
+                        .height(45.dp)
                 )
             }
         }
@@ -212,7 +215,7 @@ fun generateMessages(): MutableList<Message> {
         messages.add(
             Message(
                 MessageStatus.READ,
-                "Long message that has to wrap or fucking destroy the layout $i",
+                "Long message that has to wrap or destroy the layout",
                 Calendar.getInstance(),
                 i % 2 == 0
             )

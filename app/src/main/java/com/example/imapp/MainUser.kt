@@ -1,5 +1,6 @@
 package com.example.imapp
 
+import org.mindrot.jbcrypt.BCrypt
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
 import java.security.spec.InvalidKeySpecException
@@ -14,24 +15,16 @@ class MainUser(
 ) {
     private val random = SecureRandom()
 
-    fun generateSalt(): ByteArray {
+    fun generateSalt(): String {
+        val saltRounds = 12 // Number of salt rounds (cost factor)
+        val secureRandom = SecureRandom()
         val salt = ByteArray(16)
-        random.nextBytes(salt)
-        return salt
+        secureRandom.nextBytes(salt)
+        return BCrypt.gensalt(saltRounds, secureRandom) // Generate salt using bcrypt
     }
 
-    fun hashPassword(password: String, salt: ByteArray): ByteArray {
-        val spec = PBEKeySpec(password.toCharArray(), salt, 1000, 256)
-        try {
-            val skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
-            return skf.generateSecret(spec).encoded
-        } catch (e: NoSuchAlgorithmException) {
-            throw AssertionError("Error while hashing a password: " + e.message, e)
-        } catch (e: InvalidKeySpecException) {
-            throw AssertionError("Error while hashing a password: " + e.message, e)
-        } finally {
-            spec.clearPassword()
-        }
+    fun hashPassword(password: String, salt: String): String {
+        return BCrypt.hashpw(password, salt)
     }
 
     companion object {

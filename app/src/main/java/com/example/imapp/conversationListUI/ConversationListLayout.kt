@@ -4,17 +4,20 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,9 +53,17 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
+            verticalArrangement = Arrangement.Top
         ) {
-            LazyColumn(modifier = Modifier.fillMaxSize(), content = {
+            ConversationListHeader(
+                modifier = Modifier.padding(
+                    start = 10.dp,
+                    top = 10.dp,
+                    end = 10.dp
+                ).fillMaxWidth().weight(0.05f)
+            )
+            LazyColumn(modifier = Modifier.fillMaxSize().weight(0.95f), content = {
                 conversations.forEach { conversation ->
                     item {
                         ConversationListItem(conversation)
@@ -61,6 +72,27 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
             })
         }
         AddConversationButton()
+    }
+
+    @Composable
+    fun ConversationListHeader(modifier: Modifier) {
+        Row(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Conversations",
+                fontSize = 25.sp
+            )
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Refresh conversations",
+                modifier = Modifier
+                    .clickable { /* TODO("Refresh conversations") */ }
+                    .width(40.dp)
+                    .height(40.dp)
+            )
+        }
     }
 
     @OptIn(ExperimentalFoundationApi::class)
