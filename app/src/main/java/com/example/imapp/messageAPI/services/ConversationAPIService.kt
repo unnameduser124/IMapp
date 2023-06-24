@@ -14,12 +14,13 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 class ConversationAPIService {
 
-    fun getAllUserConversations(userID: Long): Pair<StatusCode, List<ConversationAPIData>> {
+    fun getAllUserConversations(userID: String): Pair<StatusCode, List<ConversationAPIData>> {
         val client = OkHttpClient()
 
         val request = Request.Builder()
             .url("$BASE_URL/get-all-user-conversations/$userID")
             .build()
+        request.url
 
         val call = client.newCall(request)
         val response = call.execute()

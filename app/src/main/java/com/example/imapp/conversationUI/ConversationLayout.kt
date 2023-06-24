@@ -33,24 +33,32 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.imapp.Conversation
 import com.example.imapp.Message
 import com.example.imapp.MessageStatus
+import com.example.imapp.messageAPI.dataClasses.MessageAPIData
+import com.example.imapp.messageAPI.services.MessageAPIService
 import java.util.Calendar
+import kotlin.concurrent.thread
 
 class ConversationLayout : ComponentActivity() {
 
     private lateinit var conversation: Conversation
-    private lateinit var messages: List<Message>
+    private lateinit var messages: SnapshotStateList<Message>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val conversationID = intent.getLongExtra("CONVERSATION_ID", -1)
+        val conversationID = intent.getStringExtra("CONVERSATION_ID")
         val conversationName = intent.getStringExtra("OTHER_USER")
-        conversation = Conversation(conversationName!!, conversationID)
-        messages = generateMessages() //TODO("Temporary, replace with API call")
+        conversation = Conversation(conversationName!!, conversationID!!)
         setContent {
+            messages = remember { SnapshotStateList<Message>() }
+            thread {
+                refreshMessages(conversationID, messages)
+            }
             GenerateLayout()
         }
     }
@@ -106,7 +114,11 @@ class ConversationLayout : ComponentActivity() {
                 imageVector = Icons.Default.Refresh,
                 contentDescription = "Refresh messages",
                 modifier = Modifier
-                    .clickable { /* TODO("Refresh messages") */ }
+                    .clickable {
+                        thread {
+                            refreshMessages(conversation.ID, messages)
+                        }
+                    }
                     .width(40.dp)
                     .height(40.dp)
             )
@@ -186,7 +198,19 @@ class ConversationLayout : ComponentActivity() {
                     .weight(0.8f)
             )
             Button(
-                onClick = { messageText.value = "" }, modifier = Modifier
+                onClick = {
+                    messageText.value = ""
+                    val message = Message(
+                        content = messageText.value,
+                        own = true,
+                        status = MessageStatus.Sent,
+                        timestamp = Calendar.getInstance()
+                    )
+                    thread{
+                        MessageAPIService().createMessage(MessageAPIData.fromMessage(message), conversation.ID)
+                        refreshMessages(conversation.ID, messages)
+                    }
+                }, modifier = Modifier
                     .weight(0.2f)
                     .padding(start = 10.dp)
             ) {
@@ -200,42 +224,20 @@ class ConversationLayout : ComponentActivity() {
             }
         }
     }
+
+    private fun refreshMessages(conversationID: String, messagesList: SnapshotStateList<Message>) {
+        val messages = MessageAPIService().getConversationMessages(conversationID)
+        val tempMessageList = mutableListOf<Message>()
+        messagesList.clear()
+        messages.second.forEach {
+            tempMessageList.add(Message.fromAPIData(it))
+        }
+        messagesList.addAll(tempMessageList)
+    }
 }
 
 @Preview
 @Composable
 fun ConversationLayoutPreview() {
     ConversationLayout().GenerateLayout()
-}
-
-fun generateMessages(): MutableList<Message> {
-
-    val messages = mutableListOf<Message>()
-    for (i in 0..20) {
-        messages.add(
-            Message(
-                MessageStatus.READ,
-                "Long message that has to wrap or destroy the layout",
-                Calendar.getInstance(),
-                i % 2 == 0
-            )
-        )
-    }
-    messages.add(
-        Message(
-            MessageStatus.READ,
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-            Calendar.getInstance(),
-            false
-        )
-    )
-    messages.add(
-        Message(
-            MessageStatus.READ,
-            "short",
-            Calendar.getInstance(),
-            false
-        )
-    )
-    return messages
 }

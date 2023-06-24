@@ -2,6 +2,7 @@ package com.example.imapp.conversationListUI
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,9 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.imapp.Conversation
+import com.example.imapp.MainUser
 import com.example.imapp.conversationUI.ConversationLayout
+import com.example.imapp.messageAPI.StatusCode
+import com.example.imapp.messageAPI.services.ConversationAPIService
+import kotlin.concurrent.thread
 
-class ConversationListLayout(val conversations: List<Conversation>, val context: Context) {
+class ConversationListLayout(val conversations: MutableList<Conversation>, val context: Context) {
 
     @Composable
     fun GenerateLayout() {
@@ -57,13 +62,18 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
             verticalArrangement = Arrangement.Top
         ) {
             ConversationListHeader(
-                modifier = Modifier.padding(
-                    start = 10.dp,
-                    top = 10.dp,
-                    end = 10.dp
-                ).fillMaxWidth().weight(0.05f)
+                modifier = Modifier
+                    .padding(
+                        start = 10.dp,
+                        top = 10.dp,
+                        end = 10.dp
+                    )
+                    .fillMaxWidth()
+                    .weight(0.05f)
             )
-            LazyColumn(modifier = Modifier.fillMaxSize().weight(0.95f), content = {
+            LazyColumn(modifier = Modifier
+                .fillMaxSize()
+                .weight(0.95f), content = {
                 conversations.forEach { conversation ->
                     item {
                         ConversationListItem(conversation)
@@ -88,7 +98,9 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
                 imageVector = Icons.Default.Refresh,
                 contentDescription = "Refresh conversations",
                 modifier = Modifier
-                    .clickable { /* TODO("Refresh conversations") */ }
+                    .clickable {
+                        refreshConversations()
+                    }
                     .width(40.dp)
                     .height(40.dp)
             )
@@ -121,7 +133,7 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
             )
         }
         if (deleteDialogOpen.value) {
-            DeleteConversationDialog(deleteDialogOpen)
+            DeleteConversationDialog(deleteDialogOpen, conversation)
         }
     }
 
@@ -178,10 +190,25 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
                 )
                 Button(
                     onClick = {
-                        if (newConversationUsername.value != "") {
-                            //TODO("Send conversation request to API, refresh conversation list")
+                        thread{
+                            if (newConversationUsername.value != "") {
+                                val conversationRequest =
+                                    ConversationAPIService().createConversation(
+                                        newConversationUsername.value
+                                    )
+                                if (conversationRequest == StatusCode.OK) {
+                                    refreshConversations()
+                                } else {
+                                    refreshConversations()
+                                    Toast.makeText(
+                                        context,
+                                        "Something went wrong",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                            dialogOpen.value = false
                         }
-                        dialogOpen.value = false
                     },
                     modifier = Modifier.padding(10.dp)
                 ) {
@@ -192,7 +219,7 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
     }
 
     @Composable
-    fun DeleteConversationDialog(dialogOpen: MutableState<Boolean>) {
+    fun DeleteConversationDialog(dialogOpen: MutableState<Boolean>, conversation: Conversation) {
         Dialog(onDismissRequest = { dialogOpen.value = false }) {
             Column(
                 modifier = Modifier
@@ -214,7 +241,13 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
                 ) {
                     Button(
                         onClick = {
-                            //TODO("Send delete conversation request to API, refresh conversation list")
+                            val deleteConversationRequest =
+                                ConversationAPIService().deleteConversation(conversation.ID)
+                            if(deleteConversationRequest == StatusCode.OK) {
+                                refreshConversations()
+                            } else {
+                                Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
+                            }
                             dialogOpen.value = false
                         }
                     ) {
@@ -231,6 +264,24 @@ class ConversationListLayout(val conversations: List<Conversation>, val context:
             }
         }
     }
+
+    fun refreshConversations() {
+        thread {
+            val conversationsRequest =
+                ConversationAPIService().getAllUserConversations(
+                    MainUser.userID
+                )
+            if (conversationsRequest.first == StatusCode.OK) {
+                val conversationList = conversationsRequest.second
+                val tempConversationList = mutableListOf<Conversation>()
+                conversationList.forEach {
+                    tempConversationList.add(Conversation.fromAPIData(it))
+                }
+                conversations.clear()
+                conversations.addAll(tempConversationList)
+            }
+        }
+    }
 }
 
 @Preview
@@ -241,7 +292,7 @@ fun PreviewConversationListLayout() {
         conversations.add(
             Conversation(
                 "Other User $i",
-                i.toLong()
+                i.toString()
             )
         )
     }

@@ -1,5 +1,6 @@
 package com.example.imapp.loginAndRegisterUI
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -29,7 +30,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.imapp.MainActivity
 import com.example.imapp.MainUser
+import com.example.imapp.messageAPI.StatusCode
+import com.example.imapp.messageAPI.dataClasses.UserAPIData
+import com.example.imapp.messageAPI.services.UserAPIService
+import kotlin.concurrent.thread
 
 class RegisterLayout : ComponentActivity() {
 
@@ -107,10 +113,41 @@ class RegisterLayout : ComponentActivity() {
                     MainUser.username = username.value
                     val salt = MainUser.generateSalt()
                     val passwordHash = MainUser.hashPassword(password.value, salt)
-                    //TODO("Register call to API")
+                    thread {
+                        val response = UserAPIService().createUser(
+                            UserAPIData(
+                                username.value,
+                                salt,
+                                "",
+                                passwordHash
+                            )
+                        )
+                        if (response.first == StatusCode.Created) {
+                            if(UserAPIService().getUser(response.second) == StatusCode.OK) {
+                                val intent = Intent(this@RegisterLayout, MainActivity::class.java)
+                                this@RegisterLayout.startActivity(intent)
+                            }
+                            else{
+                                Toast.makeText(
+                                    this@RegisterLayout,
+                                    "Something went wrong",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            Toast.makeText(
+                                this@RegisterLayout,
+                                "Something went wrong",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 } else {
-                    Toast.makeText(this@RegisterLayout, "Invalid credentials!", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        this@RegisterLayout,
+                        "Invalid credentials!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             },
             modifier = Modifier
@@ -121,6 +158,9 @@ class RegisterLayout : ComponentActivity() {
         ) {
             Text(text = "Register", fontSize = 20.sp, color = Color.Black)
         }
+    }
+    override fun onBackPressed() {
+
     }
 }
 

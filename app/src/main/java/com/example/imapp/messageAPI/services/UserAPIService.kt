@@ -13,7 +13,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 class UserAPIService {
-    fun getUser(userID: Long): StatusCode {
+    fun getUser(userID: String): StatusCode {
         val user: UserAPIData
         val client = OkHttpClient()
 
