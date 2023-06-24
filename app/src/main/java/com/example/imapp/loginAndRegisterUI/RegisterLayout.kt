@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,9 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.imapp.MainUser
 
 class RegisterLayout : ComponentActivity() {
 
@@ -46,15 +51,30 @@ class RegisterLayout : ComponentActivity() {
             verticalArrangement = Arrangement.Top
         ) {
             TextFieldPlusLabel(username, "Username")
-            TextFieldPlusLabel(password, "Password")
-            TextFieldPlusLabel(confirmPassword, "Confirm Password")
+            TextFieldPlusLabel(
+                password,
+                "Password",
+                PasswordVisualTransformation(),
+                KeyboardType.Password
+            )
+            TextFieldPlusLabel(
+                confirmPassword,
+                "Confirm Password",
+                PasswordVisualTransformation(),
+                KeyboardType.Password
+            )
             RegisterButton(username, password, confirmPassword)
         }
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun TextFieldPlusLabel(username: MutableState<String>, label: String) {
+    fun TextFieldPlusLabel(
+        username: MutableState<String>,
+        label: String,
+        visualTransformation: VisualTransformation = VisualTransformation.None,
+        keyboardType: KeyboardType = KeyboardType.Text
+    ) {
         Text(
             text = label,
             modifier = Modifier
@@ -68,7 +88,9 @@ class RegisterLayout : ComponentActivity() {
                 .padding(start = 30.dp, end = 30.dp, bottom = 20.dp, top = 5.dp)
                 .fillMaxWidth(),
             label = { Text(label) },
-            textStyle = TextStyle.Default.copy(fontSize = 20.sp)
+            textStyle = TextStyle.Default.copy(fontSize = 20.sp),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            visualTransformation = visualTransformation
         )
     }
 
@@ -82,10 +104,15 @@ class RegisterLayout : ComponentActivity() {
         Button(
             onClick = {
                 if (password.value == confirmPassword.value && password.value != "" && username.value != "") {
+                    val user = MainUser.getInstance()
+                    user.username = username.value
+                    user.password = password.value
+                    val salt = user.generateSalt()
+                    val passwordHash = user.hashPassword(password.value, salt)
                     //TODO("Register call to API")
-                }
-                else{
-                    Toast.makeText(this@RegisterLayout, "Invalid credentials!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@RegisterLayout, "Invalid credentials!", Toast.LENGTH_SHORT)
+                        .show()
                 }
             },
             modifier = Modifier
