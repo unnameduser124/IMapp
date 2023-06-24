@@ -104,13 +104,9 @@ class RegisterLayout : ComponentActivity() {
         Button(
             onClick = {
                 if (password.value == confirmPassword.value && password.value != "" && username.value != "") {
-                    val user = MainUser.getInstance()
-                    user.username = username.value
-                    user.password = password.value
-                    val salt = user.generateSalt()
-                    val passwordHash = user.hashPassword(password.value, salt)
-                    println("Salt: $salt")
-                    println("Password Hash: $passwordHash")
+                    MainUser.username = username.value
+                    val salt = MainUser.generateSalt()
+                    val passwordHash = MainUser.hashPassword(password.value, salt)
                     //TODO("Register call to API")
                 } else {
                     Toast.makeText(this@RegisterLayout, "Invalid credentials!", Toast.LENGTH_SHORT)

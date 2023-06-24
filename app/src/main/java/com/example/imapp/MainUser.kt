@@ -1,19 +1,14 @@
 package com.example.imapp
 
 import org.mindrot.jbcrypt.BCrypt
-import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
-import java.security.spec.InvalidKeySpecException
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.PBEKeySpec
 
-class MainUser(
-    val userID: String,
-    var username: String,
-    var password: String,
-    val conversationIDs: List<Long>
-) {
-    private val random = SecureRandom()
+
+object MainUser
+{
+
+    var userID: String = ""
+    var username: String = ""
 
     fun generateSalt(): String {
         val saltRounds = 12 // Number of salt rounds (cost factor)
@@ -27,15 +22,4 @@ class MainUser(
         return BCrypt.hashpw(password, salt)
     }
 
-    companion object {
-        private val instance: MainUser? = null
-        fun getInstance(): MainUser {
-            return instance ?: MainUser(
-                "",
-                "",
-                "",
-                listOf()
-            )
-        }
-    }
 }

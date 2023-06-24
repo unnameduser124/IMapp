@@ -11,11 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.imapp.conversationListUI.ConversationListLayout
+import com.example.imapp.database.UserDatabaseService
 import com.example.imapp.ui.theme.IMappTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val dbService = UserDatabaseService(this)
+        dbService.getUser()
+        println(MainUser.userID)
         setContent {
             val conversations = mutableListOf<Conversation>()
             for (i in 0..40) {
