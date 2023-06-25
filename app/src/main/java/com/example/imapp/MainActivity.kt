@@ -9,6 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.imapp.conversationListUI.ConversationListLayout
@@ -26,8 +28,9 @@ class MainActivity : ComponentActivity() {
         val dbService = UserDatabaseService(this)
         dbService.getUser()
         setContent {
-            val conversations = mutableListOf<Conversation>()
+            val conversations = remember { SnapshotStateList<Conversation>() }
 
+            UserDatabaseService(this).getUser()
             thread {
                 if(MainUser.userID!=""){
                     UserAPIService().getUser(MainUser.userID)
@@ -51,14 +54,13 @@ class MainActivity : ComponentActivity() {
                     conversations.addAll(tempConversationList)
                 }
             }
-            //for (i in 0..40) {
-            //    conversations.add(
-            //        Conversation(
-            //            "Other User $i",
-            //            i.toString()
-            //        )
-            //    )
+            //For UI testing
+            //if(MainUser.userID=="") {
+            //    val intent = Intent(this, LoginLayout::class.java)
+            //    startActivity(intent)
+            //    return@setContent
             //}
+
             ConversationListLayout(conversations, this).GenerateLayout()
         }
     }

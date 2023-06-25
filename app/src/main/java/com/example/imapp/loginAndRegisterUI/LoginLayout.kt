@@ -2,6 +2,7 @@ package com.example.imapp.loginAndRegisterUI
 
 import android.content.Intent
 import android.os.Bundle
+import android.service.autofill.UserData
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.imapp.MainActivity
 import com.example.imapp.MainUser
+import com.example.imapp.database.UserDatabaseService
 import com.example.imapp.messageAPI.StatusCode
 import com.example.imapp.messageAPI.dataClasses.UserAPIData
 import com.example.imapp.messageAPI.services.UserAPIService
@@ -119,6 +121,7 @@ class LoginLayout : ComponentActivity() {
                         if (loginRequest.first == StatusCode.OK) {
                             val getUserRequest = UserAPIService().getUser(loginRequest.second)
                             if (getUserRequest == StatusCode.OK) {
+                                UserDatabaseService(this@LoginLayout).addUser(MainUser)
                                 val intent = Intent(this@LoginLayout, MainActivity::class.java)
                                 startActivity(intent)
                                 finish()
@@ -138,6 +141,12 @@ class LoginLayout : ComponentActivity() {
                             ).show()
                         }
                     }
+                    //For UI testing
+                    //MainUser.userID = "1"
+                    //MainUser.username = username.value
+                    //val dbService = UserDatabaseService(this@LoginLayout).addUser(MainUser)
+                    //val intent = Intent(this@LoginLayout, MainActivity::class.java)
+                    //startActivity(intent)
                 }
             },
             modifier = Modifier

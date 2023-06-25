@@ -199,17 +199,19 @@ class ConversationLayout : ComponentActivity() {
             )
             Button(
                 onClick = {
-                    messageText.value = ""
                     val message = Message(
                         content = messageText.value,
                         own = true,
                         status = MessageStatus.Sent,
                         timestamp = Calendar.getInstance()
                     )
+                    messageText.value = ""
                     thread{
                         MessageAPIService().createMessage(MessageAPIData.fromMessage(message), conversation.ID)
                         refreshMessages(conversation.ID, messages)
                     }
+                    //For UI testing
+                    //messages.add(0, message)
                 }, modifier = Modifier
                     .weight(0.2f)
                     .padding(start = 10.dp)

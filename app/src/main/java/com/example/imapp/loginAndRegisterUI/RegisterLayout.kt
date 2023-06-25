@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.imapp.MainActivity
 import com.example.imapp.MainUser
+import com.example.imapp.database.UserDatabase
+import com.example.imapp.database.UserDatabaseService
 import com.example.imapp.messageAPI.StatusCode
 import com.example.imapp.messageAPI.dataClasses.UserAPIData
 import com.example.imapp.messageAPI.services.UserAPIService
@@ -124,6 +126,7 @@ class RegisterLayout : ComponentActivity() {
                         )
                         if (response.first == StatusCode.Created) {
                             if(UserAPIService().getUser(response.second) == StatusCode.OK) {
+                                UserDatabaseService(this@RegisterLayout).addUser(MainUser)
                                 val intent = Intent(this@RegisterLayout, MainActivity::class.java)
                                 this@RegisterLayout.startActivity(intent)
                             }
@@ -142,6 +145,12 @@ class RegisterLayout : ComponentActivity() {
                             ).show()
                         }
                     }
+                    //For UI testing
+                    //MainUser.userID = "1"
+                    //MainUser.username = username.value
+                    //UserDatabaseService(this@RegisterLayout).addUser(MainUser)
+                    //val intent = Intent(this@RegisterLayout, MainActivity::class.java)
+                    //startActivity(intent)
                 } else {
                     Toast.makeText(
                         this@RegisterLayout,

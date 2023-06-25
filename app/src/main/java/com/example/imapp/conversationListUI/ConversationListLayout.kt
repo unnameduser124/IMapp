@@ -76,7 +76,9 @@ class ConversationListLayout(val conversations: MutableList<Conversation>, val c
                 .weight(0.95f), content = {
                 conversations.forEach { conversation ->
                     item {
-                        ConversationListItem(conversation)
+                        Row(modifier = Modifier.padding(3.dp)) {
+                            ConversationListItem(conversation)
+                        }
                     }
                 }
             })
@@ -124,6 +126,7 @@ class ConversationListLayout(val conversations: MutableList<Conversation>, val c
                     deleteDialogOpen.value = true
                 }
             )
+            .background(Color.LightGray, RoundedCornerShape(16.dp))
         ) {
             Text(
                 text = conversation.otherUser,
@@ -209,6 +212,12 @@ class ConversationListLayout(val conversations: MutableList<Conversation>, val c
                             }
                             dialogOpen.value = false
                         }
+                        //For UI testing
+                        //val conversation = Conversation(
+                        //    ID = "${conversations.size}",
+                        //    otherUser = newConversationUsername.value,
+                        //)
+                        //conversations.add(conversation)
                     },
                     modifier = Modifier.padding(10.dp)
                 ) {
@@ -241,13 +250,18 @@ class ConversationListLayout(val conversations: MutableList<Conversation>, val c
                 ) {
                     Button(
                         onClick = {
-                            val deleteConversationRequest =
-                                ConversationAPIService().deleteConversation(conversation.ID)
-                            if(deleteConversationRequest == StatusCode.OK) {
-                                refreshConversations()
-                            } else {
-                                Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
+                            thread{
+                                val deleteConversationRequest =
+                                    ConversationAPIService().deleteConversation(conversation.ID)
+                                if (deleteConversationRequest == StatusCode.OK) {
+                                    refreshConversations()
+                                } else {
+                                    Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
                             }
+                            //For UI testing
+                            //conversations.remove(conversation)
                             dialogOpen.value = false
                         }
                     ) {
@@ -265,7 +279,7 @@ class ConversationListLayout(val conversations: MutableList<Conversation>, val c
         }
     }
 
-    fun refreshConversations() {
+    private fun refreshConversations() {
         thread {
             val conversationsRequest =
                 ConversationAPIService().getAllUserConversations(
